@@ -1,8 +1,1 @@
-{
-  "version": 2,
-  "routes": [
-    { "src": "/api/game", "dest": "/api/game.js" },
-    { "src": "/api/save", "dest": "/api/save.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
-}
+
