@@ -2,39 +2,399 @@
 <html dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>AI بسيط</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>خارج الموضوع - AI</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#0d0d0d;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px;padding:20px}
-input,button{width:100%;max-width:420px;padding:14px;border:none;border-radius:10px;font-size:16px}
-input{background:#1a1a1a;color:#fff;border:1px solid #333}
-button{background:#0a84ff;color:#fff;cursor:pointer;font-weight:bold}
-button:hover{background:#0066cc}
-#r{background:#1a1a1a;padding:16px;border-radius:10px;max-width:420px;width:100%;min-height:120px;white-space:pre-wrap;line-height:1.6;border:1px solid #333;overflow-wrap:break-word}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:#0a0a0f;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.screen{display:none;width:100%;max-width:500px;animation:fadeIn .4s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+h1{color:#0a84ff;text-align:center;margin-bottom:8px;font-size:28px}
+.subtitle{text-align:center;color:#888;margin-bottom:30px;font-size:14px}
+
+input,button{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;margin-bottom:12px;outline:none}
+input{background:#1a1a24;color:#fff;border:1px solid #2a2a3a}
+input:focus{border-color:#0a84ff}
+button{background:#0a84ff;color:#fff;cursor:pointer;font-weight:bold;transition:.2s}
+button:hover{background:#0066cc;transform:translateY(-1px)}
+button:disabled{background:#333;color:#666;cursor:not-allowed;transform:none}
+
+.card{background:#1a1a24;border:1px solid #2a2a3a;border-radius:16px;padding:20px;margin-bottom:16px}
+.card-title{color:#0a84ff;font-size:14px;font-weight:bold;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.card-text{color:#ccc;line-height:1.7;font-size:15px}
+
+.player-tag{display:inline-block;background:#0a84ff20;color:#0a84ff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;margin-bottom:8px;border:1px solid #0a84ff40}
+.spy-tag{background:#ff2d5520;color:#ff2d55;border-color:#ff2d5540}
+
+.challenge-box{background:#1a1a24;border-left:4px solid #ff9500;padding:16px;border-radius:0 12px 12px 0;margin:16px 0}
+.challenge-title{color:#ff9500;font-weight:bold;margin-bottom:6px}
+
+.timer{font-size:48px;text-align:center;color:#0a84ff;font-weight:bold;margin:20px 0;font-variant-numeric:tabular-nums}
+.timer.warning{color:#ff9500}
+.timer.danger{color:#ff2d55;animation:pulse .5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.vote-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.vote-btn{background:#1a1a24;border:2px solid #2a2a3a;padding:16px;border-radius:12px;cursor:pointer;text-align:center;transition:.2s}
+.vote-btn:hover{border-color:#0a84ff;background:#0a84ff10}
+.vote-btn.selected{border-color:#0a84ff;background:#0a84ff20}
+
+.result-win{color:#30d158;font-size:24px;text-align:center;margin:20px 0}
+.result-lose{color:#ff2d55;font-size:24px;text-align:center;margin:20px 0}
+
+.leaderboard-item{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#1a1a24;border-radius:10px;margin-bottom:8px;border:1px solid #2a2a3a}
+.leaderboard-rank{font-weight:bold;color:#0a84ff;width:30px}
+.leaderboard-name{flex:1;padding:0 12px}
+.leaderboard-score{font-weight:bold}
+
+.loading{text-align:center;padding:40px;color:#888}
+.spinner{width:40px;height:40px;border:3px solid #2a2a3a;border-top-color:#0a84ff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.hidden-detail{background:#0a84ff15;border:1px dashed #0a84ff50;padding:16px;border-radius:12px;text-align:center;color:#888;font-style:italic;margin:12px 0}
 </style>
 </head>
 <body>
-<input id="q" placeholder="اكتب سؤالك هنا...">
-<button onclick="s()">إرسال</button>
-<div id="r">الرد يظهر هنا...</div>
+
+<!-- شاشة 1: البداية -->
+<div id="screen-start" class="screen active">
+  <h1>🎭 خارج الموضوع</h1>
+  <p class="subtitle">هل تستطيع اكتشاف الجاسوس؟</p>
+  <div class="card">
+    <div class="card-title">طريقة اللعب</div>
+    <div class="card-text">
+      • AI يختار موضوعًا غريبًا<br>
+      • 4 لاعبين، أحدهم جاسوس<br>
+      • الجاسوس لا يعرف الموضوع الحقيقي<br>
+      • في كل جولة، AI يطرح تحديًا<br>
+      • اكتشف الجاسوس قبل أن يفوز!
+    </div>
+  </div>
+  <input id="playerName" placeholder="أدخل اسمك..." maxlength="20">
+  <button onclick="startGame()">ابدأ اللعبة</button>
+  <button onclick="showLeaderboard()" style="background:#2a2a3a">🏆 لوحة المتصدرين</button>
+</div>
+
+<!-- شاشة 2: تحميل -->
+<div id="screen-loading" class="screen">
+  <div class="loading">
+    <div class="spinner"></div>
+    <div>AI يجهز اللعبة...</div>
+  </div>
+</div>
+
+<!-- شاشة 3: التفاصيل -->
+<div id="screen-details" class="screen">
+  <h1>📋 تفاصيلك</h1>
+  <div id="detail-card" class="card">
+    <div id="role-tag" class="player-tag"></div>
+    <div class="card-title">الموضوع</div>
+    <div id="topic-text" class="card-text"></div>
+    <div class="card-title" style="margin-top:16px">تفاصيلك</div>
+    <div id="detail-text" class="card-text"></div>
+  </div>
+  <div class="hidden-detail">تفاصيل اللاعبين الآخرين مخفية 🔒</div>
+  <button onclick="startRounds()">ابدأ الجولات</button>
+</div>
+
+<!-- شاشة 4: الجولات -->
+<div id="screen-rounds" class="screen">
+  <h1>💬 الجولة <span id="round-num">1</span></h1>
+  <div id="round-content" class="card">
+    <div class="card-title">الحوار</div>
+    <div id="dialogue-text" class="card-text"></div>
+  </div>
+  <button id="next-round-btn" onclick="nextRound()">الجولة التالية</button>
+</div>
+
+<!-- شاشة 5: التحدي -->
+<div id="screen-challenge" class="screen">
+  <h1>⚡ تحدي AI</h1>
+  <div class="timer" id="timer">30</div>
+  <div class="challenge-box">
+    <div class="challenge-title">التحدي</div>
+    <div id="challenge-text"></div>
+  </div>
+  <div id="challenge-options"></div>
+</div>
+
+<!-- شاشة 6: التصويت -->
+<div id="screen-vote" class="screen">
+  <h1>🗳️ من الجاسوس؟</h1>
+  <p class="subtitle">صوت بناءً على الحوار والتحديات</p>
+  <div class="vote-grid" id="vote-grid"></div>
+  <button onclick="submitVote()">تصويت</button>
+</div>
+
+<!-- شاشة 7: النتيجة -->
+<div id="screen-result" class="screen">
+  <h1>🏁 النتيجة</h1>
+  <div id="result-message"></div>
+  <div class="card">
+    <div class="card-title">الموضوع الحقيقي</div>
+    <div id="real-topic" class="card-text"></div>
+    <div class="card-title" style="margin-top:16px">الجاسوس كان</div>
+    <div id="real-spy" class="card-text"></div>
+  </div>
+  <button onclick="saveAndRestart()">العب مرة أخرى</button>
+  <button onclick="showLeaderboard()" style="background:#2a2a3a">لوحة المتصدرين</button>
+</div>
+
+<!-- شاشة 8: المتصدرين -->
+<div id="screen-leaderboard" class="screen">
+  <h1>🏆 المتصدرين</h1>
+  <div id="leaderboard-list"></div>
+  <button onclick="showScreen('screen-start')">رجوع</button>
+</div>
+
 <script>
-async function s(){
-  const q=document.getElementById("q").value;
-  if(!q)return;
-  document.getElementById("r").textContent="جاري التفكير...";
-  try{
-    const res=await fetch("/api/chat",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"openai/gpt-3.5-turbo",messages:[{role:"user",content:q}]})
-    });
-    const data=await res.json();
-    if(!res.ok){
-      document.getElementById("r").textContent="خطأ من الخادم: " + JSON.stringify(data,null,2);
-      return;
+// ====== حالة اللعبة ======
+let gameState = {
+  playerName: '',
+  topic: '',
+  details: [],
+  challenges: [],
+  playerIndex: 0,
+  spyIndex: 0,
+  currentRound: 0,
+  score: 0,
+  dialogues: [],
+  selectedVote: -1
+};
+
+// ====== دوال المساعدة ======
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ====== المتصدرين (localStorage) ======
+function getLeaderboard() {
+  const data = localStorage.getItem('spy_leaderboard');
+  return data ? JSON.parse(data) : [];
+}
+
+function saveToLeaderboard(entry) {
+  const board = getLeaderboard();
+  board.push(entry);
+  board.sort((a, b) => b.score - a.score);
+  localStorage.setItem('spy_leaderboard', JSON.stringify(board.slice(0, 20)));
+}
+
+// ====== بدء اللعبة ======
+async function startGame() {
+  const name = document.getElementById('playerName').value.trim();
+  if (!name) return alert('أدخل اسمك أولاً!');
+  gameState.playerName = name;
+  showScreen('screen-loading');
+
+  try {
+    const res = await fetch('/api/game', {method: 'POST', headers: {'Content-Type': 'application/json'}});
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    gameState.topic = data.topic;
+    gameState.details = data.details;
+    gameState.challenges = data.challenges;
+    gameState.spyIndex = data.details.findIndex(d => d.isSpy);
+    gameState.playerIndex = Math.floor(Math.random() * 4);
+
+    const myDetail = gameState.details[gameState.playerIndex];
+    document.getElementById('topic-text').textContent = gameState.topic;
+    document.getElementById('detail-text').textContent = myDetail.text;
+    document.getElementById('role-tag').textContent = myDetail.isSpy ? 'أنت الجاسوس 🕵️' : 'أنت لاعب عادي 👤';
+    document.getElementById('role-tag').className = 'player-tag ' + (myDetail.isSpy ? 'spy-tag' : '');
+
+    showScreen('screen-details');
+  } catch (e) {
+    alert('خطأ: ' + e.message);
+    showScreen('screen-start');
+  }
+}
+
+// ====== الجولات ======
+function startRounds() {
+  gameState.currentRound = 1;
+  gameState.dialogues = [];
+  showRound();
+}
+
+function showRound() {
+  showScreen('screen-rounds');
+  document.getElementById('round-num').textContent = gameState.currentRound;
+
+  const names = ['أحمد', 'سارة', 'خالد', 'ليلى'];
+  const realNames = names.map((n,i) => i === gameState.playerIndex ? gameState.playerName : n);
+
+  let dialogue = '';
+  for (let i = 0; i < 4; i++) {
+    if (i === gameState.playerIndex) continue;
+    const isSpy = i === gameState.spyIndex;
+    const lines = isSpy ? [
+      'أعتقد أن الموضوع مثير للاهتمام...',
+      'لم أفهم بالضبط، لكن يبدو جميلاً',
+      'هل يمكن أن يكون هناك شيء آخر؟',
+      'أنا لست متأكداً تماماً'
+    ] : [
+      'هذا واضح تماماً!',
+      'أتفق معك تماماً',
+      'التفاصيل دقيقة جداً',
+      'لا يمكن أن يكون غير ذلك'
+    ];
+    dialogue += `<strong>${realNames[i]}:</strong> ${lines[Math.floor(Math.random()*lines.length)]}<br><br>`;
+  }
+
+  document.getElementById('dialogue-text').innerHTML = dialogue;
+
+  const btn = document.getElementById('next-round-btn');
+  if (gameState.currentRound >= 2) {
+    btn.textContent = 'التحدي النهائي ⚡';
+    btn.onclick = showChallenge;
+  } else {
+    btn.textContent = 'الجولة التالية';
+    btn.onclick = nextRound;
+  }
+}
+
+function nextRound() {
+  gameState.currentRound++;
+  showRound();
+}
+
+// ====== التحدي ======
+function showChallenge() {
+  showScreen('screen-challenge');
+  const challenge = gameState.challenges[Math.floor(Math.random() * gameState.challenges.length)];
+  document.getElementById('challenge-text').textContent = challenge;
+
+  const optionsDiv = document.getElementById('challenge-options');
+  optionsDiv.innerHTML = '';
+
+  const options = [
+    {text: 'أكمل الحوار بشكل طبيعي', action: () => finishChallenge(true)},
+    {text: 'اطرح سؤالاً على لاعب آخر', action: () => finishChallenge(true)},
+    {text: 'تجنب الرد (مريب!)', action: () => finishChallenge(false)}
+  ];
+
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt.text;
+    btn.onclick = opt.action;
+    btn.style.marginBottom = '8px';
+    optionsDiv.appendChild(btn);
+  });
+
+  let time = 30;
+  const timerEl = document.getElementById('timer');
+  timerEl.textContent = time;
+  timerEl.className = 'timer';
+
+  gameState.timerInterval = setInterval(() => {
+    time--;
+    timerEl.textContent = time;
+    if (time <= 10) timerEl.className = 'timer danger';
+    else if (time <= 20) timerEl.className = 'timer warning';
+
+    if (time <= 0) {
+      clearInterval(gameState.timerInterval);
+      finishChallenge(false);
     }
-    document.getElementById("r").textContent=data.choices?.[0]?.message?.content || "لا يوجد رد: " + JSON.stringify(data,null,2);
-  }catch(e){document.getElementById("r").textContent="خطأ شبكة: "+e.message}
+  }, 1000);
+}
+
+function finishChallenge(success) {
+  clearInterval(gameState.timerInterval);
+  if (success) gameState.score += 10;
+  showVote();
+}
+
+// ====== التصويت ======
+function showVote() {
+  showScreen('screen-vote');
+  const grid = document.getElementById('vote-grid');
+  grid.innerHTML = '';
+  const names = ['أحمد', 'سارة', 'خالد', 'ليلى'];
+
+  for (let i = 0; i < 4; i++) {
+    if (i === gameState.playerIndex) continue;
+    const btn = document.createElement('div');
+    btn.className = 'vote-btn';
+    btn.textContent = names[i];
+    btn.onclick = () => {
+      document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.selectedVote = i;
+    };
+    grid.appendChild(btn);
+  }
+}
+
+function submitVote() {
+  if (gameState.selectedVote === -1) return alert('اختر لاعباً أولاً!');
+
+  const correct = gameState.selectedVote === gameState.spyIndex;
+  if (correct) gameState.score += 50;
+  else gameState.score -= 20;
+
+  const names = ['أحمد', 'سارة', 'خالد', 'ليلى'];
+  const msg = document.getElementById('result-message');
+
+  if (correct) {
+    msg.innerHTML = '<div class="result-win">🎉 أحسنت! اكتشفت الجاسوس!</div>';
+  } else {
+    msg.innerHTML = '<div class="result-lose">😢 خاطئ! الجاسوس فاز!</div>';
+  }
+
+  document.getElementById('real-topic').textContent = gameState.topic;
+  document.getElementById('real-spy').textContent = names[gameState.spyIndex] + ' - ' + gameState.details[gameState.spyIndex].text;
+
+  showScreen('screen-result');
+}
+
+// ====== الحفظ والإعادة ======
+function saveAndRestart() {
+  const myDetail = gameState.details[gameState.playerIndex];
+  saveToLeaderboard({
+    player_name: gameState.playerName,
+    topic: gameState.topic,
+    was_spy: myDetail.isSpy,
+    discovered: gameState.selectedVote === gameState.spyIndex,
+    score: Math.max(0, gameState.score),
+    created_at: new Date().toISOString()
+  });
+
+  gameState = {playerName:'',topic:'',details:[],challenges:[],playerIndex:0,spyIndex:0,currentRound:0,score:0,dialogues:[],selectedVote:-1};
+  document.getElementById('playerName').value = '';
+  showScreen('screen-start');
+}
+
+// ====== المتصدرين ======
+function showLeaderboard() {
+  const data = getLeaderboard();
+  const list = document.getElementById('leaderboard-list');
+
+  if (!data.length) {
+    list.innerHTML = '<div style="text-align:center;color:#888;padding:20px">لا توجد نتائج بعد</div>';
+  } else {
+    list.innerHTML = data.map((row, i) => `
+      <div class="leaderboard-item">
+        <span class="leaderboard-rank">#${i+1}</span>
+        <span class="leaderboard-name">${row.player_name}</span>
+        <span class="leaderboard-score">${row.score} نقطة</span>
+      </div>
+    `).join('');
+  }
+  showScreen('screen-leaderboard');
 }
 </script>
 </body>
