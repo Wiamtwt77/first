@@ -1,1 +1,38 @@
 
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>AI بسيط</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#0d0d0d;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px;padding:20px}
+input,button{width:100%;max-width:420px;padding:14px;border:none;border-radius:10px;font-size:16px}
+input{background:#1a1a1a;color:#fff;border:1px solid #333}
+button{background:#0a84ff;color:#fff;cursor:pointer;font-weight:bold}
+button:hover{background:#0066cc}
+#r{background:#1a1a1a;padding:16px;border-radius:10px;max-width:420px;width:100%;min-height:120px;white-space:pre-wrap;line-height:1.6;border:1px solid #333}
+</style>
+</head>
+<body>
+<input id="q" placeholder="اكتب سؤالك هنا...">
+<button onclick="s()">إرسال</button>
+<div id="r">الرد يظهر هنا...</div>
+<script>
+async function s(){
+  const q=document.getElementById("q").value;
+  if(!q)return;
+  document.getElementById("r").textContent="جاري التفكير...";
+  try{
+    const res=await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"openai/gpt-3.5-turbo",messages:[{role:"user",content:q}]})
+    });
+    const data=await res.json();
+    document.getElementById("r").textContent=data.choices?.[0]?.message?.content || "حدث خطأ";
+  }catch(e){document.getElementById("r").textContent="خطأ: "+e.message}
+}
+</script>
+</body>
+</html>
