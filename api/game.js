@@ -2,36 +2,29 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const key = process.env.OPENROUTER_KEY;
   if (!key) return res.status(500).json({ error: 'OPENROUTER_KEY missing' });
 
-  const systemPrompt = `You are a game generator for "Out of Context" (خارج الموضوع) in Arabic. Output ONLY valid JSON, no markdown, no extra text.
+  const { players } = req.body;
+  const playerCount = players || 4;
 
-Requirements:
-1. A funny, weird topic (e.g., "A cat's birthday party in space", "Stealing a cake from Mars")
-2. 4 detail sets:
-   - 3 correct (similar but with slightly different wording)
-   - 1 wrong (close to correct but has a different detail that reveals the spy)
-3. 3 escalating challenges
+  const systemPrompt = `You are a game generator for "برا السالفة" (Out of Context) in Arabic.
 
-Output format (Arabic text inside JSON):
+Generate a JSON object with:
+1. "topic": A funny, weird topic in Arabic (e.g., "سرقة الكعكة من المريخ", "حفلة عيد ميلاد قطة في الفضاء")
+2. "fakeTopic": A topic that is CLOSE but different (e.g., if topic is "Mars bakery", fakeTopic is "Moon bakery")
+3. "spyIndex": Random number from 0 to ${playerCount - 1}
+4. "details": Array of ${playerCount} strings, each giving a slightly different detail about the topic. The spy's detail should subtly hint at the fakeTopic without being obvious.
+
+Output ONLY valid JSON, no markdown, no extra text:
 {
-  "topic": "الموضوع",
-  "details": [
-    {"player": 1, "text": "تفصيل اللاعب 1", "isSpy": false},
-    {"player": 2, "text": "تفصيل اللاعب 2", "isSpy": false},
-    {"player": 3, "text": "تفصيل اللاعب 3", "isSpy": false},
-    {"player": 4, "text": "تفصيل اللاعب 4 (خاطئ)", "isSpy": true}
-  ],
-  "challenges": [
-    "تحدي 1",
-    "تحدي 2",
-    "تحدي 3"
-  ]
+  "topic": "...",
+  "fakeTopic": "...",
+  "spyIndex": 0,
+  "details": ["detail 1", "detail 2", ...]
 }`;
 
   try {
@@ -40,14 +33,14 @@ Output format (Arabic text inside JSON):
       headers: {
         'Authorization': 'Bearer ' + key,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://spy-game.vercel.app',
-        'X-Title': 'Spy Game'
+        'HTTP-Referer': 'https://bra-alsalfa.vercel.app',
+        'X-Title': 'Bra AlSalfa'
       },
       body: JSON.stringify({
         model: 'openai/gpt-3.5-turbo',
         messages: [
           {role: 'system', content: systemPrompt},
-          {role: 'user', content: 'Generate a new game in Arabic'}
+          {role: 'user', content: 'Generate a new game in Arabic for ' + playerCount + ' players'}
         ],
         temperature: 0.9,
         max_tokens: 900
@@ -65,21 +58,28 @@ Output format (Arabic text inside JSON):
       gameData = match ? JSON.parse(match[0]) : null;
     }
 
-    if (!gameData || !gameData.details || !Array.isArray(gameData.details) || gameData.details.length !== 4) {
+    if (!gameData || !gameData.topic || !gameData.fakeTopic) {
+      const topics = [
+        {t: 'سرقة الكعكة من المريخ', f: 'سرقة الكعكة من القمر', d: ['المخبز المريخي فقد كعكته', 'الكعكة الحمراء اختفت ليلاً', 'شخص غامق سرق من المريخ', 'المخبز القمري فقد كعكته']},
+        {t: 'حفلة عيد ميلاد قطة في الفضاء', f: 'حفلة زفاف كلب في المحيط', d: ['القطة ترتدي خوذة فضاء', 'البالونات تطفو في الجاذبية الصغرى', 'الكعكة على شكل كوكب', 'الكلب يرتدي زي غطاس']},
+        {t: 'مدرسة السحر للبطاريق', f: 'مدرسة الرقص للفيلة', d: ['البطاريق يتعلمون تعويذات الجليد', 'العصا السحرية مصنوعة من سمك', 'الفصل الدراسي في القارة القطبية', 'الفيلة يرتدون أحذية باليه']}
+      ];
+      const pick = topics[Math.floor(Math.random() * topics.length)];
       gameData = {
-        topic: "سرقة الكعكة من المريخ",
-        details: [
-          {player: 1, text: "الكعكة سرقت من مخبز المريخ الأحمر في الليل", isSpy: false},
-          {player: 2, text: "المخبز المريخي فقد كعكته الحمراء ليلاً", isSpy: false},
-          {player: 3, text: "الكعكة الحمراء اختفت من مخبز المريخ", isSpy: false},
-          {player: 4, text: "الكعكة سرقت من مخبز القمر الأبيض في الصباح", isSpy: true}
-        ],
-        challenges: [
-          "اختر لاعباً واسأله: ما لون الكعكة؟",
-          "اكتب جملة واحدة تصف الموقف بدون كلمة 'مريخ'",
-          "من يجب أن يكشف دوره؟ إذا أخطأت تخسر 20 نقطة!"
-        ]
+        topic: pick.t,
+        fakeTopic: pick.f,
+        spyIndex: Math.floor(Math.random() * playerCount),
+        details: pick.d.slice(0, playerCount)
       };
+    }
+
+    while (gameData.details.length < playerCount) {
+      gameData.details.push('تفاصيل إضافية عن ' + gameData.topic);
+    }
+    gameData.details = gameData.details.slice(0, playerCount);
+
+    if (gameData.spyIndex < 0 || gameData.spyIndex >= playerCount) {
+      gameData.spyIndex = Math.floor(Math.random() * playerCount);
     }
 
     res.status(200).json(gameData);
