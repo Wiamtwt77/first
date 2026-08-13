@@ -1,4 +1,3 @@
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -9,7 +8,7 @@ export default async function handler(req, res) {
 
   const key = process.env.OPENROUTER_KEY;
   if (!key) {
-    return res.status(500).json({ error: 'المفتاح غير موجود في Vercel. تأكد من إضافة OPENROUTER_KEY في Environment Variables.' });
+    return res.status(500).json({ error: 'OPENROUTER_KEY not found in Vercel Environment Variables.' });
   }
 
   try {
@@ -19,7 +18,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://your-site.vercel.app',
-        'X-Title': 'AI بسيط'
+        'X-Title': 'AI Simple'
       },
       body: JSON.stringify(req.body)
     });
